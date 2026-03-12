@@ -7,6 +7,11 @@ author 'Haunted Core Team'
 description 'Standalone supernatural roleplay framework with ESX/QBCore/QBox compatibility bridges'
 version '1.0.0'
 
+provide 'qb-core'
+provide 'es_extended'
+provide 'qbx_core'
+provide 'oxmysql'
+
 shared_scripts {
     'config.lua',
     'shared/constants.lua',
@@ -16,6 +21,10 @@ shared_scripts {
 }
 
 server_scripts {
+    'server/db_node.js',
+    'server/db.lua',
+    'server/db_schema.lua',
+    'server/db_migrations.lua',
     'server/player_manager.lua',
     'server/permissions.lua',
     'server/economy.lua',
@@ -24,14 +33,17 @@ server_scripts {
     'server/event_security.lua',
     'server/ghost_system.lua',
     'server/anti_exploit.lua',
-    'server/main.lua',
+    'bridges/oxmysql_bridge.lua',
     'bridges/qbcore_bridge.lua',
     'bridges/esx_bridge.lua',
     'bridges/qbox_bridge.lua',
+    'server/compatibility_provider.lua',
+    'exports/database.lua',
     'exports/player.lua',
     'exports/ghost.lua',
     'exports/economy.lua',
-    'exports/permissions.lua'
+    'exports/permissions.lua',
+    'server/main.lua'
 }
 
 client_scripts {

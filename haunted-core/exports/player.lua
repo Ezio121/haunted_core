@@ -1,23 +1,23 @@
 HauntedCore = HauntedCore or {}
 local HC = HauntedCore
 
-function GetPlayer(source)
+local function GetPlayer(source)
     return HC.PlayerManager.GetPlayer(source)
 end
 
-function GetPlayerByCitizenId(citizenId)
+local function GetPlayerByCitizenId(citizenId)
     return HC.PlayerManager.GetPlayerByCitizenId(citizenId)
 end
 
-function CreatePlayer(source)
+local function CreatePlayer(source)
     return HC.PlayerManager.CreatePlayer(source)
 end
 
-function SavePlayer(source)
+local function SavePlayer(source)
     return HC.PlayerManager.SavePlayer(source)
 end
 
-function DropPlayerBySource(source, reason)
+local function DropPlayerBySource(source, reason)
     return HC.PlayerManager.DropPlayer(source, reason)
 end
 

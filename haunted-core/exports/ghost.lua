@@ -1,15 +1,15 @@
 HauntedCore = HauntedCore or {}
 local HC = HauntedCore
 
-function SetGhostState(source, state, reason)
+local function SetGhostState(source, state, reason)
     return HC.Ghost.SetGhostState(source, state, reason)
 end
 
-function GetGhostState(source)
+local function GetGhostState(source)
     return HC.Ghost.GetGhostState(source)
 end
 
-function UseGhostAbility(source, abilityName, payload)
+local function UseGhostAbility(source, abilityName, payload)
     return HC.Ghost.UseAbility(source, abilityName, payload)
 end
 

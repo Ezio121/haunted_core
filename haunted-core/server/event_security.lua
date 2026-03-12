@@ -72,6 +72,11 @@ local function registerInvalidAttempt(source, reason)
     local attempts = invalidAttempts[source]
     local maxAttempts = Config.Security.maxInvalidAttempts or 6
 
+    HC.LogAudit("security_invalid_attempt", source, nil, {
+        reason = reason,
+        attempts = attempts
+    })
+
     if HC.AntiExploit then
         HC.AntiExploit.Flag(source, ("security_invalid:%s"):format(reason or "unknown"), 8)
     end
@@ -112,6 +117,11 @@ local function checkMassTrigger(source)
     bucket.count = 0
     bucket.windowStart = now
 
+    HC.LogAudit("event_spam_attempt", source, nil, {
+        strikes = bucket.strikes,
+        reason = "mass_trigger"
+    })
+
     if HC.AntiExploit then
         HC.AntiExploit.Flag(source, "security_mass_trigger", 18)
     end
@@ -136,6 +146,10 @@ local function checkRateLimit(source, eventName, options)
 
     local eventBucket = getEventBucket(source, eventName, eventWindow)
     if not hitRateBucket(eventBucket, eventLimit, eventWindow) then
+        HC.LogAudit("event_spam_attempt", source, nil, {
+            event = eventName,
+            reason = "event_rate_limit"
+        })
         if HC.AntiExploit then
             HC.AntiExploit.Flag(source, ("event_rate:%s"):format(eventName), 10)
         end
@@ -144,6 +158,10 @@ local function checkRateLimit(source, eventName, options)
 
     local globalBucket = getGlobalBucket(source, globalWindow)
     if not hitRateBucket(globalBucket, globalLimit, globalWindow) then
+        HC.LogAudit("event_spam_attempt", source, nil, {
+            event = eventName,
+            reason = "global_rate_limit"
+        })
         if HC.AntiExploit then
             HC.AntiExploit.Flag(source, "global_rate_limit", 12)
         end
@@ -209,6 +227,10 @@ function EventSecurity.ValidateRequest(source, eventName, payload, options)
 
     local passRate, rateReason = checkRateLimit(source, eventName, options)
     if not passRate then
+        HC.LogAudit("event_spam_attempt", source, nil, {
+            event = eventName,
+            reason = rateReason
+        })
         return false, nil, rateReason
     end
 
@@ -249,6 +271,10 @@ function EventSecurity.RegisterSecureNetEvent(eventName, callback, options)
 
         if not success then
             print(("[HauntedCore] Secure event error (%s): %s"):format(eventName, err))
+            HC.LogAudit("secure_event_runtime_error", src, nil, {
+                event = eventName,
+                error = tostring(err)
+            })
             if HC.AntiExploit then
                 HC.AntiExploit.Flag(src, "secure_event_runtime_error", 6)
             end

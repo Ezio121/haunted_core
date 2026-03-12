@@ -22,6 +22,14 @@ function Utils.SafeJsonDecode(raw, fallback)
     return decoded
 end
 
+function Utils.SafeJsonEncode(value, fallback)
+    local ok, encoded = pcall(json.encode, value)
+    if not ok then
+        return fallback or "{}"
+    end
+    return encoded
+end
+
 function Utils.DeepCopy(value, seen)
     if type(value) ~= "table" then
         return value
@@ -70,6 +78,61 @@ function Utils.DeepEqual(a, b)
     return true
 end
 
+function Utils.IsArray(tbl)
+    if type(tbl) ~= "table" then
+        return false
+    end
+
+    local count = 0
+    local max = 0
+    for key in pairs(tbl) do
+        if type(key) ~= "number" or key < 1 or key % 1 ~= 0 then
+            return false
+        end
+        count = count + 1
+        if key > max then
+            max = key
+        end
+    end
+
+    return max == count
+end
+
+function Utils.NormalizeDbParams(params)
+    if params == nil then
+        return {}
+    end
+
+    if type(params) ~= "table" then
+        return { params }
+    end
+
+    local out = {}
+    if Utils.IsArray(params) then
+        for i = 1, #params do
+            out[i] = params[i]
+        end
+        return out
+    end
+
+    for key, value in pairs(params) do
+        out[key] = value
+        if type(key) == "string" and key:sub(1, 1) == "@" then
+            local alias = key:sub(2)
+            if out[alias] == nil then
+                out[alias] = value
+            end
+        elseif type(key) == "string" then
+            local alias = "@" .. key
+            if out[alias] == nil then
+                out[alias] = value
+            end
+        end
+    end
+
+    return out
+end
+
 function Utils.GetIdentifierByType(source, wantedType)
     wantedType = tostring(wantedType)
     local identifiers = GetPlayerIdentifiers(source)
@@ -90,6 +153,17 @@ function Utils.GetPrimaryIdentifier(source)
         or Utils.GetIdentifierByType(source, "fivem")
         or Utils.GetIdentifierByType(source, "discord")
         or ("player:%s"):format(tostring(source))
+end
+
+function Utils.GetIdentifierByPriority(source)
+    local priorities = (Config.Identifiers and Config.Identifiers.Priority) or { "license", "steam", "discord", "fivem" }
+    for i = 1, #priorities do
+        local identifier = Utils.GetIdentifierByType(source, priorities[i])
+        if identifier then
+            return identifier
+        end
+    end
+    return Utils.GetPrimaryIdentifier(source)
 end
 
 function Utils.CreateCitizenId(seed)

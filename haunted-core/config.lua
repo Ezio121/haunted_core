@@ -6,6 +6,43 @@ Config.Core = {
     playerDropSaveDelayMs = 25
 }
 
+Config.Database = {
+    Debug = false,
+    SlowQueryWarningMs = 250,
+    AutoMigrate = true,
+    AutoCreateSchema = true,
+    SaveIntervalMinutes = 10,
+    UseTransactions = true,
+    AuditLogging = true,
+    NativeMariaDB = {
+        Enabled = true,
+        Host = "127.0.0.1",
+        Port = 3306,
+        User = "root",
+        Password = "",
+        Database = "fivem",
+        Charset = "utf8mb4",
+        ConnectionLimit = 10,
+        QueueLimit = 0,
+        SupportBigNumbers = true,
+        BigNumberStrings = false,
+        EnableKeepAlive = true,
+        KeepAliveInitialDelay = 0,
+        ConnectTimeoutMs = 10000,
+        QueryTimeoutMs = 10000
+    }
+}
+
+Config.Compatibility = {
+    StrictMode = false,
+    OxmysqlEmulation = true,
+    LegacyCallbacks = true
+}
+
+Config.Identifiers = {
+    Priority = { "license", "steam", "discord", "fivem" }
+}
+
 Config.Security = {
     tokenLength = 48,
     tokenRotationIntervalMs = 900000,
@@ -105,5 +142,6 @@ Config.AntiExploit = {
 Config.Bridges = {
     qbcore = true,
     esx = true,
-    qbox = true
+    qbox = true,
+    oxmysql = true
 }

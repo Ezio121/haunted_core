@@ -8,9 +8,10 @@ local HC = HauntedCore
 QBox = QBox or {}
 QBox.Functions = QBox.Functions or {}
 QBox.Players = QBox.Players or {}
+QBox.ServerCallbacks = QBox.ServerCallbacks or {}
 QBX = QBX or QBox
 
-local callbacks = {}
+local usableItems = {}
 
 local function wrapPlayer(player)
     if not player then
@@ -26,10 +27,14 @@ local function wrapPlayer(player)
             name = player.name,
             job = player.job,
             money = player.accounts,
-            items = player.inventory,
-            metadata = player.metadata
+            metadata = player.metadata,
+            items = player.inventory
         }
     }
+
+    function wrapped.GetMoney(account)
+        return HC.Economy.GetMoney(player.source, account)
+    end
 
     function wrapped.AddMoney(account, amount, reason)
         return HC.Economy.AddMoney(player.source, account, amount, reason)
@@ -39,16 +44,16 @@ local function wrapPlayer(player)
         return HC.Economy.RemoveMoney(player.source, account, amount, reason)
     end
 
-    function wrapped.GetMoney(account)
-        return HC.Economy.GetMoney(player.source, account)
+    function wrapped.SetMoney(account, amount, reason)
+        return HC.Economy.SetMoney(player.source, account, amount, reason)
     end
 
-    function wrapped.AddItem(name, count, metadata)
-        return HC.Inventory.AddItem(player.source, name, count, metadata or {})
+    function wrapped.AddItem(itemName, count, metadata)
+        return HC.Inventory.AddItem(player.source, itemName, count, metadata or {})
     end
 
-    function wrapped.RemoveItem(name, count, metadata)
-        return HC.Inventory.RemoveItem(player.source, name, count, metadata or {})
+    function wrapped.RemoveItem(itemName, count, metadata)
+        return HC.Inventory.RemoveItem(player.source, itemName, count, metadata or {})
     end
 
     function wrapped.HasPermission(permission)
@@ -59,47 +64,67 @@ local function wrapPlayer(player)
 end
 
 function QBox.Player(source)
-    local player = HC.PlayerManager.GetPlayer(source)
-    return wrapPlayer(player)
+    return wrapPlayer(HC.PlayerManager.GetPlayer(source))
 end
 
 function QBox.Functions.GetPlayer(source)
-    local player = HC.PlayerManager.GetPlayer(source)
-    return wrapPlayer(player)
+    return wrapPlayer(HC.PlayerManager.GetPlayer(source))
 end
 
 function QBox.Functions.GetPlayerByCitizenId(citizenId)
-    local player = HC.PlayerManager.GetPlayerByCitizenId(citizenId)
-    return wrapPlayer(player)
+    return wrapPlayer(HC.PlayerManager.GetPlayerByCitizenId(citizenId))
+end
+
+function QBox.Functions.GetPlayers()
+    local players = GetPlayers()
+    local out = {}
+    for i = 1, #players do
+        out[i] = tonumber(players[i])
+    end
+    return out
 end
 
 function QBox.Functions.HasPermission(source, permission)
     return HC.Permissions.HasPermission(source, permission)
 end
 
-function QBox.Functions.CreateCallback(name, cb)
-    callbacks[name] = cb
+function QBox.Functions.CreateCallback(name, callback)
+    QBox.ServerCallbacks[name] = callback
+end
+
+function QBox.Functions.TriggerCallback(name, source, callback, ...)
+    local handler = QBox.ServerCallbacks[name]
+    if handler then
+        handler(source, callback, ...)
+    end
+end
+
+function QBox.Functions.CreateUseableItem(itemName, callback)
+    usableItems[itemName] = callback
+end
+
+function QBox.Functions.UseItem(source, itemName, ...)
+    local callback = usableItems[itemName]
+    if callback then
+        callback(source, itemName, ...)
+        return true
+    end
+    return false
 end
 
 RegisterNetEvent("qbx_core:server:triggerCallback", function(name, requestId, ...)
-    local src = source
-    local callback = callbacks[name]
+    local source = source
+    local callback = QBox.ServerCallbacks[name]
     if not callback then
-        TriggerClientEvent("qbx_core:client:callback", src, requestId, nil)
+        TriggerClientEvent("qbx_core:client:callback", source, requestId, nil)
         return
     end
 
-    callback(src, function(...)
-        TriggerClientEvent("qbx_core:client:callback", src, requestId, ...)
+    callback(source, function(...)
+        TriggerClientEvent("qbx_core:client:callback", source, requestId, ...)
     end, ...)
 end)
 
 exports("GetQBoxObject", function()
     return QBox
-end)
-
-AddEventHandler("QBox:GetObject", function(cb)
-    if type(cb) == "function" then
-        cb(QBox)
-    end
 end)

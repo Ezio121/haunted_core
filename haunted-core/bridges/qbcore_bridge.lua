@@ -7,10 +7,13 @@ local HC = HauntedCore
 
 QBCore = QBCore or {}
 QBCore.Config = QBCore.Config or {}
+QBCore.Shared = QBCore.Shared or {}
 QBCore.Functions = QBCore.Functions or {}
+QBCore.Commands = QBCore.Commands or {}
 QBCore.Players = QBCore.Players or {}
 
-local callbacks = {}
+local serverCallbacks = {}
+local usableItems = {}
 
 local function buildPlayerData(player)
     return {
@@ -23,6 +26,18 @@ local function buildPlayerData(player)
         money = player.accounts,
         items = player.inventory
     }
+end
+
+local function findFirstItem(items, itemName)
+    if type(items) ~= "table" then
+        return nil
+    end
+    for i = 1, #items do
+        if items[i].name == itemName then
+            return items[i]
+        end
+    end
+    return nil
 end
 
 local function wrapPlayer(player)
@@ -47,6 +62,10 @@ local function wrapPlayer(player)
         return HC.Economy.RemoveMoney(player.source, account, amount, reason)
     end
 
+    function wrapped.Functions.SetMoney(account, amount, reason)
+        return HC.Economy.SetMoney(player.source, account, amount, reason)
+    end
+
     function wrapped.Functions.GetMoney(account)
         return HC.Economy.GetMoney(player.source, account)
     end
@@ -60,27 +79,28 @@ local function wrapPlayer(player)
     end
 
     function wrapped.Functions.GetItemByName(name)
-        local items = HC.Inventory.GetItems(player.source) or {}
-        for i = 1, #items do
-            if items[i].name == name then
-                return items[i]
-            end
-        end
-        return nil
+        return findFirstItem(HC.Inventory.GetInventory(player.source), name)
     end
 
     function wrapped.Functions.SetMetaData(key, value)
-        player.metadata[key] = value
+        player:SetMetaData(key, value)
         return true
     end
 
     function wrapped.Functions.GetMetaData(key)
-        return player.metadata[key]
+        return player:GetMetaData(key)
     end
 
     function wrapped.Functions.SetJob(name, grade)
         player:SetJob(name, grade)
-        wrapped.Functions.UpdatePlayerData()
+        return true
+    end
+
+    function wrapped.Functions.Notify(message, messageType, duration)
+        TriggerClientEvent("chat:addMessage", player.source, {
+            color = { 255, 255, 255 },
+            args = { "[QBCore]", tostring(message) }
+        })
         return true
     end
 
@@ -88,13 +108,11 @@ local function wrapPlayer(player)
 end
 
 function QBCore.Functions.GetPlayer(source)
-    local player = HC.PlayerManager.GetPlayer(source)
-    return wrapPlayer(player)
+    return wrapPlayer(HC.PlayerManager.GetPlayer(source))
 end
 
 function QBCore.Functions.GetPlayerByCitizenId(citizenId)
-    local player = HC.PlayerManager.GetPlayerByCitizenId(citizenId)
-    return wrapPlayer(player)
+    return wrapPlayer(HC.PlayerManager.GetPlayerByCitizenId(citizenId))
 end
 
 function QBCore.Functions.GetPlayers()
@@ -114,37 +132,52 @@ function QBCore.Functions.GetPermission(source)
     return HC.Permissions.GetPrimary(source)
 end
 
-function QBCore.Functions.CreateCallback(name, cb)
-    callbacks[name] = cb
+function QBCore.Functions.CreateCallback(name, callback)
+    serverCallbacks[name] = callback
 end
 
-function QBCore.Functions.TriggerCallback(name, source, cb, ...)
-    local callback = callbacks[name]
-    if not callback then
+function QBCore.Functions.TriggerCallback(name, source, callback, ...)
+    local handler = serverCallbacks[name]
+    if not handler then
         return
     end
-    callback(source, cb, ...)
+    handler(source, callback, ...)
+end
+
+function QBCore.Functions.CreateUseableItem(itemName, callback)
+    usableItems[itemName] = callback
+end
+
+function QBCore.Functions.CanUseItem(itemName)
+    return usableItems[itemName] ~= nil
+end
+
+function QBCore.Functions.UseItem(source, itemName, ...)
+    local callback = usableItems[itemName]
+    if type(callback) == "function" then
+        callback(source, itemName, ...)
+        return true
+    end
+    return false
 end
 
 RegisterNetEvent("QBCore:Server:TriggerCallback", function(name, requestId, ...)
-    local src = source
-    local callback = callbacks[name]
+    local source = source
+    local callback = serverCallbacks[name]
     if not callback then
-        TriggerClientEvent("QBCore:Client:TriggerCallback", src, requestId, nil)
+        TriggerClientEvent("QBCore:Client:TriggerCallback", source, requestId, nil)
         return
     end
 
-    callback(src, function(...)
-        TriggerClientEvent("QBCore:Client:TriggerCallback", src, requestId, ...)
+    callback(source, function(...)
+        TriggerClientEvent("QBCore:Client:TriggerCallback", source, requestId, ...)
     end, ...)
 end)
 
 exports("GetCoreObject", function()
-    return QBCore
-end)
-
-AddEventHandler("QBCore:GetObject", function(cb)
-    if type(cb) == "function" then
-        cb(QBCore)
+    if QBox then
+        QBCore.QBox = QBox
+        QBCore.Player = QBox.Player
     end
+    return QBCore
 end)

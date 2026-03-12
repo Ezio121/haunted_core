@@ -30,6 +30,26 @@ local function setStateBag(source, state)
     end
 end
 
+local function persistGhostState(player)
+    HC.DB.execute([[
+        INSERT INTO ghost_states (citizenid, state, spirit_energy, haunt_level, possession_state, last_transition_at)
+        VALUES (?, ?, ?, ?, ?, NOW())
+        ON DUPLICATE KEY UPDATE
+            state = VALUES(state),
+            spirit_energy = VALUES(spirit_energy),
+            haunt_level = VALUES(haunt_level),
+            possession_state = VALUES(possession_state),
+            last_transition_at = VALUES(last_transition_at),
+            updated_at = CURRENT_TIMESTAMP
+    ]], {
+        player.citizenid,
+        player.ghost_state,
+        player.accounts.spirit_energy or 0,
+        tonumber(player.metadata.haunt_level) or 0,
+        Utils.SafeJsonEncode({}, "{}")
+    })
+end
+
 local function sendGhostState(source, state, reason)
     TriggerClientEvent(Constants.EVENTS.GHOST_STATE_SYNC, -1, {
         source = source,
@@ -107,6 +127,10 @@ end
 function Ghost.SetGhostState(source, state, reason)
     state = tostring(state or Constants.GHOST_STATES.ALIVE)
     if state ~= Constants.GHOST_STATES.ALIVE and state ~= Constants.GHOST_STATES.GHOST then
+        HC.LogAudit("ghost_state_abuse_attempt", source, nil, {
+            state = state,
+            reason = "invalid_state"
+        })
         return false, "invalid_state"
     end
 
@@ -117,9 +141,15 @@ function Ghost.SetGhostState(source, state, reason)
 
     player.ghost_state = state
     player.metadata.lastGhostState = os.time()
+    player._dirty.ghost = true
     setStateBag(source, state)
+    persistGhostState(player)
     sendGhostState(source, state, reason or "set_state")
     HC.Events.Emit("ghost:stateChanged", source, state)
+    HC.LogAudit("ghost_state_changed", source, player.citizenid, {
+        state = state,
+        reason = reason
+    })
     return true
 end
 
@@ -136,6 +166,10 @@ function Ghost.CanUseAbility(source, abilityName)
     end
 
     if player.ghost_state ~= Constants.GHOST_STATES.GHOST then
+        HC.LogAudit("ghost_ability_denied", source, player.citizenid, {
+            ability = abilityName,
+            reason = "not_ghost"
+        })
         return false, "not_ghost"
     end
 
@@ -151,6 +185,11 @@ function Ghost.CanUseAbility(source, abilityName)
 
     local spirit = HC.Economy.GetMoney(source, Constants.ACCOUNTS.SPIRIT)
     if spirit < (ability.cost or 0) then
+        HC.LogAudit("ghost_ability_denied", source, player.citizenid, {
+            ability = abilityName,
+            reason = "insufficient_spirit",
+            spirit = spirit
+        })
         return false, "insufficient_spirit_energy"
     end
 
@@ -279,6 +318,14 @@ function Ghost.UseAbility(source, abilityName, payload)
     end
 
     setAbilityCooldown(source, abilityName, tonumber(ability.cooldownMs) or 1000)
+    local player = getPlayer(source)
+    if player then
+        persistGhostState(player)
+    end
+    HC.LogAudit("ghost_ability_used", source, player and player.citizenid or nil, {
+        ability = abilityName,
+        cost = ability.cost or 0
+    })
     HC.Events.Emit("ghost:abilityUsed", source, abilityName)
     return true
 end

@@ -75,6 +75,20 @@ function EntityManager.PossessEntity(source, netId, durationMs)
     }
     possessionBySource[source] = netId
 
+    local player = HC.PlayerManager.GetPlayer(source)
+    if player then
+        HC.DB.execute([[
+            INSERT INTO owned_entities (citizenid, entity_type, net_id, metadata)
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE net_id = VALUES(net_id), metadata = VALUES(metadata), updated_at = CURRENT_TIMESTAMP
+        ]], {
+            player.citizenid,
+            "possessed",
+            netId,
+            Utils.SafeJsonEncode({ expiresAt = expiresAt }, "{}")
+        })
+    end
+
     TriggerClientEvent("haunted:client:entityPossession", source, {
         netId = netId,
         durationMs = durationMs
@@ -127,6 +141,20 @@ function EntityManager.HauntEntity(source, netId, durationMs, intensity)
         intensity = intensity,
         expiresAt = nowMs() + durationMs
     }
+
+    local player = HC.PlayerManager.GetPlayer(source)
+    if player then
+        HC.DB.execute([[
+            INSERT INTO owned_entities (citizenid, entity_type, net_id, metadata)
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE net_id = VALUES(net_id), metadata = VALUES(metadata), updated_at = CURRENT_TIMESTAMP
+        ]], {
+            player.citizenid,
+            "haunted",
+            netId,
+            Utils.SafeJsonEncode({ intensity = intensity, durationMs = durationMs }, "{}")
+        })
+    end
 
     TriggerClientEvent("haunted:client:hauntStarted", -1, {
         source = source,

@@ -9,12 +9,13 @@ ESX = ESX or {}
 ESX.Players = ESX.Players or {}
 ESX.ServerCallbacks = ESX.ServerCallbacks or {}
 
-local function getInventoryItem(source, itemName)
-    local items = HC.Inventory.GetItems(source) or {}
+local usableItems = {}
+
+local function findInventoryItem(source, itemName)
+    local items = HC.Inventory.GetInventory(source)
     for i = 1, #items do
-        local item = items[i]
-        if item.name == itemName then
-            return item
+        if items[i].name == itemName then
+            return items[i]
         end
     end
     return nil
@@ -28,7 +29,6 @@ local function wrapXPlayer(player)
     local xPlayer = {
         source = player.source,
         identifier = player.license,
-        name = player.name,
         job = player.job
     }
 
@@ -42,6 +42,10 @@ local function wrapXPlayer(player)
 
     function xPlayer.getMoney()
         return HC.Economy.GetMoney(player.source, "cash")
+    end
+
+    function xPlayer.setMoney(amount)
+        return HC.Economy.SetMoney(player.source, "cash", amount, "esx_set_money")
     end
 
     function xPlayer.addMoney(amount, reason)
@@ -68,17 +72,11 @@ local function wrapXPlayer(player)
     end
 
     function xPlayer.setAccountMoney(accountName, amount, reason)
-        local current = HC.Economy.GetMoney(player.source, accountName)
-        if amount > current then
-            return HC.Economy.AddMoney(player.source, accountName, amount - current, reason)
-        elseif amount < current then
-            return HC.Economy.RemoveMoney(player.source, accountName, current - amount, reason)
-        end
-        return true
+        return HC.Economy.SetMoney(player.source, accountName, amount, reason)
     end
 
     function xPlayer.getInventoryItem(itemName)
-        local item = getInventoryItem(player.source, itemName)
+        local item = findInventoryItem(player.source, itemName)
         return {
             name = itemName,
             count = item and item.count or 0
@@ -94,31 +92,21 @@ local function wrapXPlayer(player)
     end
 
     function xPlayer.canCarryItem(itemName, count)
-        local hasItem, existingCount = HC.Inventory.HasItem(player.source, itemName, 1, {})
-        local maxStack = Config.Inventory.maxStack or 9999
-        local total = (hasItem and existingCount or 0) + (tonumber(count) or 0)
-        return total <= maxStack
+        local has, current = HC.Inventory.HasItem(player.source, itemName, 1)
+        local total = (has and current or 0) + (tonumber(count) or 0)
+        return total <= (Config.Inventory.maxStack or 9999)
     end
 
-    function xPlayer.setJob(name, grade, onDuty)
+    function xPlayer.setJob(name, grade)
         player:SetJob(name, grade)
         xPlayer.job = player.job
         return true
     end
 
-    function xPlayer.setMeta(key, value)
-        player.metadata[key] = value
-        return true
-    end
-
-    function xPlayer.getMeta(key)
-        return player.metadata[key]
-    end
-
-    function xPlayer.showNotification(text)
+    function xPlayer.showNotification(message)
         TriggerClientEvent("chat:addMessage", player.source, {
             color = { 255, 255, 255 },
-            args = { "[ESX]", tostring(text) }
+            args = { "[ESX]", tostring(message) }
         })
     end
 
@@ -126,46 +114,59 @@ local function wrapXPlayer(player)
 end
 
 function ESX.GetPlayerFromId(source)
-    local player = HC.PlayerManager.GetPlayer(source)
-    return wrapXPlayer(player)
+    return wrapXPlayer(HC.PlayerManager.GetPlayer(source))
 end
 
 function ESX.GetPlayerFromIdentifier(identifier)
-    local player = HC.PlayerManager.GetPlayerByLicense(identifier)
-    return wrapXPlayer(player)
+    return wrapXPlayer(HC.PlayerManager.GetPlayerByLicense(identifier))
 end
 
-function ESX.RegisterServerCallback(name, cb)
-    ESX.ServerCallbacks[name] = cb
-end
-
-function ESX.TriggerServerCallback(name, source, cb, ...)
-    local callback = ESX.ServerCallbacks[name]
-    if not callback then
-        return
+function ESX.GetExtendedPlayers()
+    local list = {}
+    local players = HC.PlayerManager.GetAllPlayers()
+    for source, player in pairs(players) do
+        list[#list + 1] = wrapXPlayer(player)
     end
-    callback(source, cb, ...)
+    return list
+end
+
+function ESX.RegisterServerCallback(name, callback)
+    ESX.ServerCallbacks[name] = callback
+end
+
+function ESX.TriggerServerCallback(name, source, callback, ...)
+    local handler = ESX.ServerCallbacks[name]
+    if handler then
+        handler(source, callback, ...)
+    end
+end
+
+function ESX.RegisterUsableItem(itemName, callback)
+    usableItems[itemName] = callback
+end
+
+function ESX.UseItem(source, itemName, ...)
+    local callback = usableItems[itemName]
+    if callback then
+        callback(source, ...)
+        return true
+    end
+    return false
 end
 
 RegisterNetEvent("esx:triggerServerCallback", function(name, requestId, ...)
-    local src = source
-    local cb = ESX.ServerCallbacks[name]
-    if not cb then
-        TriggerClientEvent("esx:serverCallback", src, requestId, nil)
+    local source = source
+    local callback = ESX.ServerCallbacks[name]
+    if not callback then
+        TriggerClientEvent("esx:serverCallback", source, requestId, nil)
         return
     end
 
-    cb(src, function(...)
-        TriggerClientEvent("esx:serverCallback", src, requestId, ...)
+    callback(source, function(...)
+        TriggerClientEvent("esx:serverCallback", source, requestId, ...)
     end, ...)
 end)
 
 exports("getSharedObject", function()
     return ESX
-end)
-
-AddEventHandler("esx:getSharedObject", function(cb)
-    if type(cb) == "function" then
-        cb(ESX)
-    end
 end)

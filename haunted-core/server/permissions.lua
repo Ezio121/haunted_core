@@ -83,9 +83,20 @@ function Permissions.AddPermission(source, permission)
     if newWeight > currentWeight then
         perms.primary = normalized
     end
+    if player._dirty then
+        player._dirty.permissions = true
+    end
+
+    HC.DB.insert(
+        "INSERT IGNORE INTO player_permissions (identifier, permission, granted_by) VALUES (?, ?, ?)",
+        { player.identifier, normalized, "system" }
+    )
 
     syncStateBag(player.source, perms.primary)
     HC.Events.Emit("permission:added", source, normalized)
+    HC.LogAudit("permission_added", source, player.citizenid, {
+        permission = normalized
+    })
     return true
 end
 
@@ -101,6 +112,13 @@ function Permissions.RemovePermission(source, permission)
     end
 
     perms.list[normalized] = nil
+    if player._dirty then
+        player._dirty.permissions = true
+    end
+    HC.DB.execute("DELETE FROM player_permissions WHERE identifier = ? AND permission = ?", {
+        player.identifier,
+        normalized
+    })
 
     if perms.primary == normalized then
         local best = "player"
@@ -119,5 +137,8 @@ function Permissions.RemovePermission(source, permission)
 
     syncStateBag(player.source, perms.primary)
     HC.Events.Emit("permission:removed", source, normalized)
+    HC.LogAudit("permission_removed", source, player.citizenid, {
+        permission = normalized
+    })
     return true
 end
