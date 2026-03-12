@@ -5,15 +5,28 @@ lua54 'yes'
 name 'haunted-core'
 author 'Haunted Core Team'
 description 'Standalone supernatural roleplay framework with ESX/QBCore/QBox compatibility bridges'
-version '1.0.0'
+version '1.1.0'
 
 provide 'qb-core'
 provide 'es_extended'
 provide 'qbx_core'
 provide 'oxmysql'
 
+ui_page 'nui/index.html'
+
+files {
+    'nui/index.html',
+    'nui/styles/*.css',
+    'nui/scripts/*.js',
+    'nui/assets/icons/*',
+    'nui/assets/textures/*',
+    'nui/assets/runes/*',
+    'nui/assets/audio/*'
+}
+
 shared_scripts {
     'config.lua',
+    'shared/ui_config.lua',
     'shared/constants.lua',
     'shared/utils.lua',
     'shared/events.lua',
@@ -47,6 +60,14 @@ server_scripts {
 }
 
 client_scripts {
+    'client/ui.lua',
+    'client/hud.lua',
+    'client/notifications.lua',
+    'client/menus.lua',
+    'client/radial.lua',
+    'client/interaction.lua',
+    'client/death_state.lua',
+    'client/ghost_fx.lua',
     'client/main.lua',
     'client/ghost_state.lua',
     'client/visuals.lua',

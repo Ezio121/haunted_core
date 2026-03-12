@@ -1,0 +1,100 @@
+.radial-root {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+.radial-wrap {
+    position: relative;
+    width: min(28rem, 56vh);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    pointer-events: auto;
+}
+
+.radial-ring {
+    position: absolute;
+    inset: 11%;
+    border-radius: 50%;
+    border: 1px solid rgba(157, 172, 191, 0.32);
+    background:
+        radial-gradient(circle at 50% 50%, rgba(16, 20, 28, 0.94), rgba(9, 12, 16, 0.95)),
+        url("../assets/runes/rune-ring.svg") center/100% no-repeat;
+    box-shadow: var(--panel-shadow), var(--glow-soft);
+}
+
+.radial-center {
+    position: absolute;
+    inset: 36%;
+    border-radius: 50%;
+    border: 1px solid rgba(155, 171, 191, 0.4);
+    background: rgba(12, 15, 20, 0.88);
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 0.6rem;
+}
+
+.radial-center .title {
+    font-size: 0.72rem;
+    color: var(--bone);
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+}
+
+.radial-center .subtitle {
+    margin-top: 0.2rem;
+    font-size: 0.62rem;
+    color: var(--muted);
+}
+
+.radial-slice {
+    --slice-angle: 0deg;
+    --slice-rotation: 0deg;
+    position: absolute;
+    inset: 0;
+    pointer-events: auto;
+    clip-path: polygon(50% 50%, 89% 26%, 98% 50%, 89% 74%);
+    transform: rotate(var(--slice-rotation));
+}
+
+.radial-slice .hit {
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(160, 175, 194, 0.26);
+    background: linear-gradient(140deg, rgba(21, 26, 34, 0.66), rgba(15, 19, 26, 0.56));
+    transition: background 100ms ease, border-color 100ms ease;
+}
+
+.radial-slice.selected .hit {
+    border-color: rgba(147, 215, 255, 0.75);
+    background: linear-gradient(130deg, rgba(41, 60, 70, 0.82), rgba(24, 36, 45, 0.76));
+    box-shadow: inset 0 0 20px rgba(147, 215, 255, 0.18);
+}
+
+.radial-slice.locked .hit {
+    filter: grayscale(0.8);
+    opacity: 0.52;
+}
+
+.radial-slice .label {
+    position: absolute;
+    left: 66%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bone);
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.radial-slice .cooldown {
+    position: absolute;
+    left: 66%;
+    top: calc(50% + 13px);
+    transform: translateX(-50%);
+    font-size: 0.56rem;
+    color: var(--muted);
+}

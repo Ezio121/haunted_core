@@ -1,0 +1,170 @@
+.overlay-root {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.overlay-item {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    animation: overlayFadeIn 260ms ease forwards;
+}
+
+.overlay-panel {
+    max-width: min(44rem, 70vw);
+    text-align: center;
+    color: var(--bone);
+    padding: 1.2rem 1.4rem;
+    border-radius: 18px;
+    border: 1px solid rgba(157, 172, 191, 0.33);
+    background: rgba(8, 10, 14, 0.34);
+    backdrop-filter: blur(5px);
+}
+
+.overlay-title {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 1.28rem;
+}
+
+.overlay-subtitle {
+    margin-top: 0.35rem;
+    font-size: 0.86rem;
+    color: rgba(217, 225, 236, 0.78);
+}
+
+.overlay-whisper {
+    margin-top: 0.8rem;
+    font-size: 0.7rem;
+    color: rgba(190, 200, 214, 0.7);
+    font-style: italic;
+}
+
+.overlay-item[data-overlay="ghost_ambient"] {
+    background:
+        radial-gradient(circle at 50% 50%, rgba(110, 192, 183, 0.08), transparent 58%),
+        radial-gradient(circle at 50% 50%, rgba(147, 215, 255, 0.12), transparent 75%);
+    backdrop-filter: saturate(112%) contrast(102%);
+}
+
+.overlay-item[data-overlay="phase"] {
+    background: radial-gradient(circle at 48% 48%, rgba(147, 215, 255, 0.12), transparent 52%);
+}
+
+.overlay-item[data-overlay="death"] {
+    background:
+        radial-gradient(circle at 50% 90%, rgba(188, 77, 93, 0.18), transparent 60%),
+        radial-gradient(circle at 50% 50%, rgba(16, 18, 23, 0.78), rgba(7, 8, 12, 0.9));
+    filter: grayscale(0.18);
+}
+
+.overlay-item[data-overlay="limbo"] {
+    background:
+        linear-gradient(180deg, rgba(10, 11, 15, 0.8), rgba(7, 8, 11, 0.84)),
+        radial-gradient(circle at 50% 0%, rgba(147, 215, 255, 0.1), transparent 38%);
+}
+
+.overlay-item[data-overlay="afterlife"] {
+    background:
+        radial-gradient(circle at 50% 10%, rgba(126, 234, 217, 0.08), transparent 34%),
+        rgba(6, 8, 10, 0.82);
+}
+
+.overlay-item[data-overlay="possession"] {
+    background:
+        radial-gradient(circle at 8% 50%, rgba(126, 234, 217, 0.14), transparent 40%),
+        radial-gradient(circle at 92% 50%, rgba(126, 234, 217, 0.14), transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(12, 20, 19, 0.25), rgba(8, 10, 12, 0.65));
+    animation: cursedFlicker 3s linear infinite;
+}
+
+.interaction-root {
+    position: absolute;
+    left: 50%;
+    bottom: 8.5rem;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.interaction-prompt {
+    min-width: 14rem;
+    max-width: 24rem;
+    border-radius: 14px;
+    border: 1px solid rgba(157, 173, 191, 0.42);
+    background: rgba(14, 18, 24, 0.82);
+    box-shadow: var(--glow-soft);
+    padding: 0.6rem 0.74rem;
+    animation: whisperIn 180ms ease;
+}
+
+.interaction-line {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.prompt-key {
+    min-width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(171, 185, 202, 0.54);
+    background: rgba(26, 32, 40, 0.84);
+    color: var(--bone);
+    font-size: 0.74rem;
+}
+
+.prompt-body {
+    display: grid;
+    gap: 0.1rem;
+}
+
+.prompt-label {
+    font-size: 0.78rem;
+    color: var(--bone);
+}
+
+.prompt-desc {
+    font-size: 0.66rem;
+    color: var(--muted);
+}
+
+.prompt-progress {
+    margin-top: 0.42rem;
+    width: 100%;
+    height: 5px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(90, 100, 112, 0.34);
+}
+
+.prompt-progress span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(126, 234, 217, 0.84), rgba(147, 215, 255, 0.92));
+    transition: width 80ms linear;
+}
+
+.loading-root,
+.character-root {
+    position: absolute;
+    inset: 0;
+    pointer-events: auto;
+    display: grid;
+    place-items: center;
+}
+
+.loading-panel,
+.character-panel {
+    width: min(48rem, 80vw);
+    border-radius: 20px;
+    border: 1px solid rgba(161, 176, 196, 0.28);
+    background: rgba(11, 13, 18, 0.86);
+    box-shadow: var(--panel-shadow), var(--glow-soft);
+    padding: 1.3rem;
+}

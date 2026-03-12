@@ -1,0 +1,79 @@
+.admin-root {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+.admin-panel {
+    pointer-events: auto;
+    width: min(64rem, 92vw);
+    max-height: 88vh;
+    border-radius: 20px;
+    border: 1px solid rgba(157, 172, 191, 0.36);
+    background:
+        radial-gradient(circle at 80% 8%, rgba(147, 215, 255, 0.12), transparent 36%),
+        linear-gradient(165deg, rgba(12, 16, 21, 0.95), rgba(16, 22, 31, 0.94));
+    box-shadow: var(--panel-shadow), var(--glow-soft);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+}
+
+.admin-header {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid rgba(154, 170, 188, 0.18);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-title {
+    font-family: var(--font-display);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bone);
+}
+
+.admin-grid {
+    padding: 0.9rem;
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: 1.2fr 1fr;
+    overflow: hidden;
+}
+
+.admin-card {
+    border-radius: 12px;
+    border: 1px solid rgba(156, 171, 191, 0.28);
+    background: rgba(20, 26, 34, 0.72);
+    padding: 0.75rem;
+    overflow: auto;
+}
+
+.admin-list {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.admin-row {
+    border-radius: 10px;
+    border: 1px solid rgba(156, 171, 191, 0.2);
+    background: rgba(17, 22, 29, 0.74);
+    padding: 0.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.admin-row .name {
+    color: var(--bone);
+    font-size: 0.78rem;
+}
+
+.admin-row .meta {
+    color: var(--muted);
+    font-size: 0.66rem;
+}

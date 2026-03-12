@@ -5,6 +5,16 @@ local HC = HauntedCore
 local Constants = HC.Constants
 
 local function notify(text)
+    if HauntedCore.Notifications and HauntedCore.Notifications.Push then
+        HauntedCore.Notifications.Push({
+            type = "info",
+            title = "Ability",
+            description = tostring(text),
+            icon = "sigil"
+        })
+        return
+    end
+
     BeginTextCommandThefeedPost("STRING")
     AddTextComponentSubstringPlayerName(text)
     EndTextCommandThefeedPostTicker(false, false)

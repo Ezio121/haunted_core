@@ -1,0 +1,154 @@
+.inventory-root {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+.inventory-panel {
+    pointer-events: auto;
+    width: min(62rem, 88vw);
+    max-height: 86vh;
+    border-radius: 22px;
+    border: 1px solid var(--frame-line);
+    background:
+        radial-gradient(circle at 15% 8%, rgba(126, 234, 217, 0.12), transparent 40%),
+        linear-gradient(165deg, rgba(13, 17, 22, 0.95), rgba(15, 21, 29, 0.93));
+    box-shadow: var(--panel-shadow), var(--glow-soft);
+    display: grid;
+    grid-template-columns: 2.1fr 1.1fr;
+    overflow: hidden;
+}
+
+.inventory-left {
+    padding: 1rem;
+    border-right: 1px solid rgba(154, 170, 191, 0.17);
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 0.8rem;
+}
+
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.inventory-title {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--bone);
+}
+
+.inventory-weight {
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+
+.quick-slots {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.45rem;
+}
+
+.quick-slot {
+    border: 1px solid rgba(156, 171, 191, 0.25);
+    border-radius: 10px;
+    min-height: 54px;
+    background: rgba(21, 26, 32, 0.7);
+    display: grid;
+    place-items: center;
+    font-size: 0.68rem;
+    color: var(--muted);
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.5rem;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.item-card {
+    border-radius: 11px;
+    border: 1px solid rgba(157, 172, 191, 0.28);
+    background: rgba(18, 24, 31, 0.8);
+    min-height: 76px;
+    padding: 0.4rem;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 0.2rem;
+}
+
+.item-card[data-rarity="rare"],
+.item-card[data-rarity="ghost"] {
+    border-color: rgba(126, 234, 217, 0.58);
+    box-shadow: inset 0 0 20px rgba(126, 234, 217, 0.14);
+}
+
+.item-card[data-rarity="cursed"] {
+    border-color: rgba(188, 77, 93, 0.65);
+    box-shadow: inset 0 0 22px rgba(188, 77, 93, 0.17);
+}
+
+.item-name {
+    font-size: 0.68rem;
+    color: var(--bone);
+    line-height: 1.2;
+}
+
+.item-meta {
+    font-size: 0.58rem;
+    color: var(--muted);
+}
+
+.item-count {
+    justify-self: end;
+    font-size: 0.65rem;
+    color: var(--silver);
+}
+
+.inventory-actions {
+    display: flex;
+    gap: 0.45rem;
+}
+
+.inventory-btn {
+    border: 1px solid rgba(158, 173, 191, 0.28);
+    border-radius: 10px;
+    background: rgba(21, 28, 35, 0.72);
+    padding: 0.48rem 0.64rem;
+    color: var(--bone);
+    font-size: 0.7rem;
+}
+
+.inventory-right {
+    padding: 1rem;
+    display: grid;
+    gap: 0.7rem;
+    align-content: start;
+}
+
+.tooltip-panel {
+    border-radius: 12px;
+    border: 1px solid rgba(160, 174, 194, 0.32);
+    background: rgba(18, 24, 31, 0.82);
+    min-height: 180px;
+    padding: 0.75rem;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.tooltip-title {
+    font-size: 0.84rem;
+    color: var(--bone);
+}
+
+.tooltip-body {
+    font-size: 0.73rem;
+    color: var(--muted);
+    line-height: 1.4;
+}

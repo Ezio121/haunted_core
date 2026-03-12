@@ -22,6 +22,16 @@ function HC.Client.IsGhostActive()
 end
 
 local function notify(text)
+    if HauntedCore.Notifications and HauntedCore.Notifications.Push then
+        HauntedCore.Notifications.Push({
+            type = "supernatural",
+            title = "Ghost State",
+            description = tostring(text),
+            icon = "ghost"
+        })
+        return
+    end
+
     BeginTextCommandThefeedPost("STRING")
     AddTextComponentSubstringPlayerName(text)
     EndTextCommandThefeedPostTicker(false, false)

@@ -25,7 +25,21 @@ HauntedCore.Constants = {
         GHOST_STATE_SYNC = "haunted:client:ghostStateChanged",
         ABILITY_ACTIVATED = "haunted:client:abilityActivated",
         INVENTORY_SYNC = "haunted:client:inventorySync",
-        MONEY_SYNC = "haunted:client:moneySync"
+        MONEY_SYNC = "haunted:client:moneySync",
+        HUD_NEEDS = "haunted:hud:needs"
+    },
+    UI_EVENTS = {
+        HUD_UPDATE = "haunted:hud:update",
+        HUD_TOGGLE = "haunted:hud:toggle",
+        NOTIFY_PUSH = "haunted:notify:push",
+        MENU_OPEN = "haunted:menu:open",
+        MENU_CLOSE = "haunted:menu:close",
+        MENU_UPDATE = "haunted:menu:update",
+        RADIAL_OPEN = "haunted:radial:open",
+        RADIAL_CLOSE = "haunted:radial:close",
+        OVERLAY_SHOW = "haunted:overlay:show",
+        OVERLAY_HIDE = "haunted:overlay:hide",
+        INTERACTION_UPDATE = "haunted:interaction:update"
     },
     TABLES = {
         USERS = "users",

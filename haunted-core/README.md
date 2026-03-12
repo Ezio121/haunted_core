@@ -1,258 +1,97 @@
 # Haunted Core
 
-Haunted Core is a standalone FiveM framework with:
-
-- full server-authoritative player/account/inventory persistence
-- built-in SQL abstraction
-- oxmysql-compatible API emulation
-- compatibility bridges for QBCore, ESX, and QBox
-- supernatural gameplay systems with hardened event security
-
-## Database Architecture
-
-Haunted Core uses `server/db.lua` as the only SQL gateway.
-
-### DB API
-
-Available methods:
-
-- `HauntedCore.DB.scalar(query, params[, cb])`
-- `HauntedCore.DB.single(query, params[, cb])`
-- `HauntedCore.DB.query(query, params[, cb])`
-- `HauntedCore.DB.insert(query, params[, cb])`
-- `HauntedCore.DB.update(query, params[, cb])`
-- `HauntedCore.DB.execute(query, params[, cb])`
-- `HauntedCore.DB.transaction(queries[, cb])`
-- `HauntedCore.DB.prepare(query, params[, cb])`
-- `HauntedCore.DB.ready(cb)`
-
-Also available:
-
-- `HauntedCore.DB.promise.query(...)` and matching promise wrappers for all methods.
-
-### Backend Detection
-
-Haunted Core:
-
-1. checks for an external `oxmysql` resource
-2. uses oxmysql when present
-3. if oxmysql is absent and `Config.Database.NativeMariaDB.Enabled = true`, uses embedded native MariaDB (`server/db_node.js` + `mysql2`)
-4. falls back to built-in standalone adapter only if native MariaDB is disabled or initialization fails
-5. normalizes parameter styles (`{1, 2}`, `{id = 1}`, `{['@id'] = 1}`)
-
-### Query Safety / Performance
-
-- nil-safe return normalization
-- slow query warnings (`Config.Database.SlowQueryWarningMs`)
-- optional DB debug logging (`Config.Database.Debug`)
-- centralized error handling + audit logging
-
-## Schema and Migrations
-
-### Full Schema
-
-- `sql/haunted_core.sql`
-
-### Incremental Migrations
-
-- `sql/migrations/001_base.sql`
-- `sql/migrations/002_ghost_state.sql`
-- `sql/migrations/003_audit_logs.sql`
-
-### Runtime Components
-
-- `server/db_schema.lua` ensures migration metadata table exists
-- `server/db_migrations.lua` applies missing migrations in order and records them in `hc_schema_migrations`
-
-## Persistence Coverage
-
-Haunted Core persists:
-
-- users/identity (`users`)
-- accounts (`player_accounts`)
-- inventory (`player_inventory`)
-- metadata (`player_metadata`)
-- permissions (`player_permissions`)
-- ghost state (`ghost_states`)
-- jobs/grades (`jobs`, `job_grades`)
-- entities (`owned_entities`)
-- security/audit logs (`audit_logs`)
-- server key/value (`server_kvp`)
-
-Player load/save is driven by `server/player_manager.lua`.
-
-## Provide Compatibility
-
-`fxmanifest.lua` declares:
-
-- `provide 'qb-core'`
-- `provide 'es_extended'`
-- `provide 'qbx_core'`
-- `provide 'oxmysql'`
-
-This allows common auto-detection patterns such as:
-
-```lua
-if GetResourceState('qb-core') == 'started' then ... end
-if GetResourceState('es_extended') == 'started' then ... end
-if GetResourceState('qbx_core') == 'started' then ... end
-if GetResourceState('oxmysql') == 'started' then ... end
-```
-
-to continue working when Haunted Core is replacing those resources.
-
-## oxmysql Compatibility
-
-Haunted Core exposes oxmysql-like exports in `bridges/oxmysql_bridge.lua`:
-
-- `exports.oxmysql:query(...)`
-- `exports.oxmysql:single(...)`
-- `exports.oxmysql:scalar(...)`
-- `exports.oxmysql:insert(...)`
-- `exports.oxmysql:update(...)`
-- `exports.oxmysql:execute(...)`
-- `exports.oxmysql:transaction(...)`
-- `exports.oxmysql:prepare(...)`
-- async aliases:
-  - `query_async`
-  - `single_async`
-  - `scalar_async`
-  - `insert_async`
-  - `update_async`
-  - `execute_async`
-
-Global compatibility is also provided:
-
-- `MySQL.query(...)`
-- `MySQL.single(...)`
-- `MySQL.scalar(...)`
-- `MySQL.insert(...)`
-- `MySQL.update(...)`
-- `MySQL.prepare(...)`
-- `MySQL.execute(...)`
-- `MySQL.transaction(...)`
-- `MySQL.Sync.fetchAll(...)`
-- `MySQL.Sync.fetchScalar(...)`
-- `MySQL.Sync.execute(...)`
-- `MySQL.Async.fetchAll(...)`
-- `MySQL.Async.fetchScalar(...)`
-- `MySQL.Async.execute(...)`
-- `MySQL.Async.insert(...)`
-
-### Known Behavior Differences
-
-- Without external oxmysql, Haunted Core first attempts embedded native MariaDB.
-- If native MariaDB is unavailable (for example `mysql2` not installed), it falls back to pseudo-SQL persisted to `standalone_db.json`.
-- Exotic oxmysql edge-case behavior is not emulated; high-value/common usage paths are supported.
-
-## Native MariaDB Setup
-
-Haunted Core can connect to MariaDB without any external SQL adapter resource.
-
-1. Native mode is enabled by default (`Config.Database.NativeMariaDB.Enabled = true`)
-2. Install runtime dependency inside `haunted-core`:
-
-```bash
-cd resources/[your-path]/haunted-core
-npm install
-```
-
-3. Start resource:
-
-```cfg
-ensure haunted-core
-```
-
-If connection succeeds, startup logs show:
-
-`[HauntedCore] Using embedded native MariaDB adapter.`
-
-## Shipping Profiles
-
-Use one of these deployment profiles:
-
-### Minimal package (optional fallback profile)
-
-- Keep core Lua/JS files
-- Do not include `node_modules`
-- Set `Config.Database.NativeMariaDB.Enabled = false`
-- Result:
-  - uses external `oxmysql` if present
-  - otherwise falls back to built-in standalone JSON backend
-
-### Native MariaDB package (default profile)
-
-- Keep core Lua/JS files
-- Run `npm install` in `haunted-core` (adds `node_modules/mysql2`)
-- Set `Config.Database.NativeMariaDB.Enabled = true`
-- Result:
-  - connects directly to MariaDB from Haunted Core without external SQL adapter resource
-
-## Framework Bridge Compatibility
-
-### QBCore
-
-- `exports['qb-core']:GetCoreObject()`
-- `QBCore.Functions.GetPlayer`
-- `QBCore.Functions.GetPlayerByCitizenId`
-- `QBCore.Functions.CreateCallback`
-- usable item registration skeleton
-
-### ESX
-
-- `exports['es_extended']:getSharedObject()`
-- `ESX.GetPlayerFromId`
-- `ESX.RegisterServerCallback`
-- `ESX.RegisterUsableItem`
-
-### QBox
-
-- `exports['qbx_core']:GetQBoxObject()`
-- `QBox.Player`
-- `QBox.Functions.GetPlayer`
-- callback + usable item registration skeleton
-
-## Audit Logging and Security
-
-`HauntedCore.LogAudit(action, source, citizenid, payload)` writes to `audit_logs`.
-
-Logged categories include:
-
-- event spam
-- invalid payload/token attempts
-- money mutation anomalies
-- duplicate inventory anomalies
-- permission changes
-- ghost abuse attempts
-- anti-exploit flags/kicks
-
-## Usage Examples
-
-### Haunted Core direct query
-
-```lua
-local row = exports['haunted-core']:Single(
-    'SELECT citizenid, job FROM users WHERE license = ?',
-    { license }
-)
-```
-
-### oxmysql-compatible style
-
-```lua
-local result = exports.oxmysql:single(
-    'SELECT * FROM users WHERE citizenid = ?',
-    { citizenid }
-)
-```
-
-### Global MySQL style
-
-```lua
-local count = MySQL.scalar('SELECT COUNT(*) FROM users', {})
-```
-
-### Player access
+Haunted Core is a standalone FiveM framework for supernatural roleplay with:
+
+- server-authoritative player/account/inventory persistence
+- built-in SQL abstraction and native MariaDB mode
+- oxmysql-compatible export and global API emulation
+- QBCore / ESX / QBox compatibility bridges
+- hardened event security and exploit prevention
+- premium haunted NUI/HUD system
+
+## Resource Architecture
+
+### Core Layers
+
+- `shared/*`: constants, utilities, event bus, framework namespace
+- `server/*`: DB, migrations, player state, economy, inventory, permissions, anti-exploit
+- `bridges/*`: compatibility adapters (`qb-core`, `es_extended`, `qbx_core`, `oxmysql`)
+- `client/*`: gameplay + UI integration + radial/interaction/death overlays
+- `nui/*`: HTML/CSS/JS haunted design system and runtime UI modules
+
+### UI Layers
+
+- `client/ui.lua`: NUI message router, focus manager, menu/radial/inventory/admin open-close APIs
+- `client/hud.lua`: throttled status sampling and partial HUD updates
+- `client/notifications.lua`: notification push interface
+- `client/menus.lua`: occult context menu system with nested categories
+- `client/radial.lua`: ghost ability wheel + nested radial support
+- `client/ghost_fx.lua`: ghost/possession/phase overlay transitions
+- `client/death_state.lua`: death/limbo/afterlife cinematic overlays
+- `client/interaction.lua`: interaction prompts and hold progress UI
+
+## UI Design Philosophy
+
+Haunted Core UI is built as a haunted grimoire + premium tactical HUD:
+
+- asymmetrical compact HUD for RP visibility
+- spectral transitions instead of intrusive full-screen blocking
+- ghost-state visual transformation with spirit-focused telemetry
+- cursed-victorian visual motifs (runes, fog, grain, ritual framing)
+- readable typography with decorative display headings only
+- event-driven updates (no frame-spam DOM writes)
+
+## Lua -> NUI Message Contracts
+
+`SendNUIMessage({ type = "...", payload = {...} })`
+
+### Core Contracts
+
+- `haunted:hud:update`
+- `haunted:hud:toggle`
+- `haunted:notify:push`
+- `haunted:menu:open`
+- `haunted:menu:update`
+- `haunted:menu:close`
+- `haunted:radial:open`
+- `haunted:radial:close`
+- `haunted:overlay:show`
+- `haunted:overlay:hide`
+- `haunted:interaction:update`
+- `haunted:inventory:open`
+- `haunted:inventory:update`
+- `haunted:inventory:close`
+- `haunted:admin:open`
+- `haunted:admin:update`
+- `haunted:admin:close`
+- `haunted:loading:show`
+- `haunted:loading:hide`
+- `haunted:character:open`
+- `haunted:character:close`
+
+### NUI -> Lua Callbacks
+
+- `haunted:ui:ready`
+- `haunted:ui:close`
+- `haunted:ui:menuAction`
+- `haunted:ui:radialAction`
+
+## UI Configuration
+
+UI config lives in `shared/ui_config.lua` (`Config.UI`):
+
+- theme variant, glow intensity, animation intensity
+- ghost distortion and performance mode
+- reduced motion and streamer mode
+- HUD scaling and layout presets
+- notification position/limits
+- radial/menu key behavior
+- overlay toggles
+- optional audio hook map
+
+## Examples
+
+### Direct Haunted Core player access
 
 ```lua
 local player = exports['haunted-core']:GetPlayer(source)
@@ -261,56 +100,155 @@ if player then
 end
 ```
 
-## Migration Notes
-
-### From QBCore
-
-- keep common `QBCore.Functions.GetPlayer` usage
-- replace direct qb-core internals with Haunted Core exports for new scripts
-- keep callback pattern compatibility via bridge
-
-### From ESX
-
-- keep `ESX.GetPlayerFromId` and callback pattern
-- migrate stateful custom logic toward Haunted Core exports for strict server authority
-
-### From QBox
-
-- bridge supports common player/callback flows
-- migrate resource-specific internals toward Haunted Core modules
-
-### From oxmysql scripts
-
-- existing `exports.oxmysql:*` usage works through Haunted Core provider
-- common `MySQL.*`, `MySQL.Sync.*`, and `MySQL.Async.*` patterns are supported
-
-## Config Highlights
-
-`config.lua` database and compatibility controls:
+### Direct Haunted DB usage
 
 ```lua
-Config.Database = {
-    Debug = false,
-    SlowQueryWarningMs = 250,
-    AutoMigrate = true,
-    AutoCreateSchema = true,
-    SaveIntervalMinutes = 10,
-    UseTransactions = true,
-    AuditLogging = true,
-    NativeMariaDB = {
-        Enabled = true,
-        Host = "127.0.0.1",
-        Port = 3306,
-        User = "root",
-        Password = "",
-        Database = "fivem"
-    }
-}
+local row = exports['haunted-core']:Single(
+    'SELECT citizenid, job FROM users WHERE license = ?',
+    { license }
+)
 ```
 
-Additional toggles:
+### oxmysql-compatible usage
 
-- `Config.Compatibility.StrictMode`
-- `Config.Compatibility.OxmysqlEmulation`
-- `Config.Compatibility.LegacyCallbacks`
-- `Config.Identifiers.Priority`
+```lua
+local result = exports.oxmysql:single(
+    'SELECT * FROM users WHERE citizenid = ?',
+    { citizenid }
+)
+```
+
+### Push notification from client script
+
+```lua
+TriggerEvent('haunted:notify:push', {
+    type = 'supernatural',
+    title = 'Veil Surge',
+    description = 'You sense an unstable spirit nearby.',
+    icon = 'ghost',
+    duration = 4500
+})
+```
+
+### Open context menu from client script
+
+```lua
+TriggerEvent('haunted:menu:open', {
+    title = 'Occult Actions',
+    subtitle = 'Choose invocation',
+    entries = {
+        {
+            id = 'ward',
+            title = 'Create Ward',
+            description = 'Protect this area from possession.',
+            clientEvent = 'haunted:notify:push',
+            args = { type = 'ritual', title = 'Ward', description = 'Ward established.' }
+        }
+    }
+})
+```
+
+## Adding New HUD Widgets
+
+1. Add new value in client state pipeline (`client/hud.lua`).
+2. Include it in `UI.UpdateHud(...)` payload.
+3. Render it in `nui/scripts/hud.js`.
+4. Style in `nui/styles/hud.css`.
+
+Keep updates interval-based and diff-aware; do not push per-frame full objects.
+
+## Adding New Menu Pages
+
+1. Build a menu payload (`title`, `subtitle`, `entries`, optional `breadcrumbs`).
+2. `TriggerEvent('haunted:menu:open', payload)`.
+3. For nested pages, provide `entry.submenu` table.
+
+## Adding New Radial Abilities
+
+1. Extend slices in `client/radial.lua` (or send custom payload via event).
+2. Set `ability`, `icon`, `cooldown`, `locked` flags.
+3. Route selected actions to secure server events.
+
+## Performance Notes
+
+- HUD updates are throttled and partial.
+- NUI modules reuse DOM containers; no full screen repaint loops.
+- FX layers are lightweight and configurable via `PerformanceMode`.
+- Pause menu suppresses HUD visibility.
+- Idle UI cost remains event-driven.
+
+## Reskin / Theme Strategy
+
+To reskin later without logic rewrites:
+
+- only modify `nui/styles/*.css`
+- keep contracts in `nui/scripts/events.js` + `client/ui.lua`
+- if adding a new theme variant, map it in `theme.css` variables
+
+## Compatibility and Provide
+
+`fxmanifest.lua` provides:
+
+- `qb-core`
+- `es_extended`
+- `qbx_core`
+- `oxmysql`
+
+Common auto-detection checks continue to pass:
+
+```lua
+if GetResourceState('qb-core') == 'started' then ... end
+if GetResourceState('es_extended') == 'started' then ... end
+if GetResourceState('qbx_core') == 'started' then ... end
+if GetResourceState('oxmysql') == 'started' then ... end
+```
+
+## Database Backend Behavior
+
+Backend selection:
+
+1. external `oxmysql` (if present)
+2. embedded native MariaDB adapter (`server/db_node.js` + `mysql2`)
+3. standalone fallback backend (when native mode is disabled/unavailable)
+
+## Migration Notes
+
+### QBCore scripts
+
+- `exports['qb-core']:GetCoreObject()` remains available
+- common player/callback/usable-item patterns are bridged
+
+### ESX scripts
+
+- `exports['es_extended']:getSharedObject()` remains available
+- callback and usable item registration remain compatible
+
+### QBox scripts
+
+- `exports['qbx_core']:GetQBoxObject()` remains available
+- common player and callback patterns are bridged
+
+### oxmysql scripts
+
+Supported old patterns include:
+
+- `exports.oxmysql:query/single/scalar/insert/update/execute/prepare/transaction`
+- `*_async` aliases
+- `MySQL.query/single/scalar/insert/update/execute/prepare/transaction`
+- `MySQL.Sync.fetchAll/fetchScalar/execute`
+- `MySQL.Async.fetchAll/fetchScalar/execute/insert`
+
+Haunted Core is the provider and does not require external oxmysql resource code.
+
+## Developer Preview Commands
+
+With `Config.UI.Developer.PreviewCommands = true`:
+
+- `/hc_uinotify`
+- `/hc_menu`
+- `/hc_radial`
+- `/hc_inventory`
+- `/hc_adminpanel`
+- `/hc_interact_preview`
+
+These commands preview haunted UI systems in-game.

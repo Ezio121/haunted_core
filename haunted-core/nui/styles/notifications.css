@@ -1,0 +1,91 @@
+.notifications-root {
+    position: absolute;
+    right: 1.6rem;
+    top: 1.6rem;
+    width: min(23rem, 34vw);
+    display: grid;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.notifications-root.bottom-right {
+    top: auto;
+    bottom: 1.6rem;
+}
+
+.notifications-root.top-center {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.notify-item {
+    position: relative;
+    pointer-events: none;
+    padding: 0.72rem 0.82rem;
+    border-radius: 14px;
+    border: 1px solid var(--frame-line);
+    background: linear-gradient(150deg, rgba(15, 18, 24, 0.9), rgba(18, 22, 29, 0.82));
+    box-shadow: var(--panel-shadow);
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 0.6rem;
+    align-items: start;
+    animation: whisperIn 220ms ease forwards;
+}
+
+.notify-item::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--notify-color, var(--pale-cyan));
+    box-shadow: 0 0 12px var(--notify-color, var(--pale-cyan));
+    border-radius: 12px 0 0 12px;
+}
+
+.notify-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    border: 1px solid rgba(168, 180, 201, 0.35);
+    background: rgba(30, 36, 44, 0.56);
+    display: grid;
+    place-items: center;
+    color: var(--notify-color, var(--pale-cyan));
+    box-shadow: 0 0 14px rgba(147, 215, 255, 0.18);
+    font-size: 0.72rem;
+}
+
+.notify-content {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.notify-title {
+    font-size: 0.78rem;
+    color: var(--bone);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.notify-desc {
+    font-size: 0.74rem;
+    color: rgba(219, 226, 235, 0.82);
+    line-height: 1.35;
+}
+
+.notify-item.success { --notify-color: var(--success); }
+.notify-item.error { --notify-color: var(--danger); }
+.notify-item.warning { --notify-color: var(--warning); }
+.notify-item.info { --notify-color: var(--pale-cyan); }
+.notify-item.supernatural { --notify-color: var(--spectral); }
+.notify-item.admin { --notify-color: var(--moon-blue); }
+.notify-item.possession { --notify-color: #86ffd4; }
+.notify-item.ritual { --notify-color: #c5c0ff; }
+
+.notify-item.exit {
+    animation: overlayFadeOut 200ms ease forwards;
+}

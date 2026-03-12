@@ -1,0 +1,57 @@
+:root {
+    --black: #07080b;
+    --charcoal: #12141a;
+    --charcoal-soft: #1c1f28;
+    --smoke: #2b3038;
+    --bone: #ddd8cd;
+    --silver: #a9b2be;
+    --moon-blue: #4d6f8f;
+    --pale-cyan: #93d7ff;
+    --violet-muted: #7f7a95;
+    --spectral: #7eead9;
+    --danger: #bc4d5d;
+    --warning: #d3bf86;
+    --success: #8de7b5;
+    --charcoal-alpha: rgba(15, 18, 24, 0.78);
+    --charcoal-soft-alpha: rgba(25, 28, 35, 0.72);
+    --frame-line: rgba(156, 171, 191, 0.36);
+    --frame-edge: rgba(147, 215, 255, 0.65);
+    --frame-soft: rgba(133, 150, 170, 0.22);
+    --muted: rgba(203, 210, 220, 0.66);
+    --glow-soft: 0 0 22px rgba(147, 215, 255, 0.24);
+    --glow-strong: 0 0 40px rgba(126, 234, 217, 0.28);
+    --danger-glow: 0 0 22px rgba(188, 77, 93, 0.45);
+    --panel-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    --flicker-shadow: 0 0 18px rgba(169, 178, 190, 0.22);
+}
+
+.haunted-ui[data-theme="cursed-victorian"] {
+    --ui-accent-primary: var(--pale-cyan);
+    --ui-accent-secondary: var(--violet-muted);
+}
+
+.haunted-ui.performance {
+    --glow-soft: 0 0 10px rgba(147, 215, 255, 0.18);
+    --glow-strong: 0 0 18px rgba(126, 234, 217, 0.16);
+    --panel-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.haunted-ui.reduced-motion * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+}
+
+.haunted-ui.ghost-state {
+    filter: saturate(0.86) contrast(1.03);
+}
+
+.haunted-ui.ghost-state .fog-layer {
+    opacity: calc(var(--fog-opacity, 0.1) + 0.08);
+}
+
+.haunted-ui.streamer-mode .sensitive {
+    filter: blur(6px);
+    opacity: 0.45;
+}
