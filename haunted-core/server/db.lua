@@ -1,4 +1,4 @@
-﻿HauntedCore = HauntedCore or {}
+HauntedCore = HauntedCore or {}
 HauntedCore.DB = HauntedCore.DB or {}
 
 local HC = HauntedCore
